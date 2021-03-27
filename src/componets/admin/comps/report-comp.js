@@ -1,11 +1,11 @@
-import Base from '/componets/Base.js'
-import CSS from './report-comp.css.js'
-import '/componets/universal/pagination/pagination.js'
+import Base from "/componets/Base.js";
+import CSS from "./report-comp.css.js";
+import "/componets/universal/pagination/pagination.js";
 
 export default class Report extends Base {
-    css = CSS
+  css = CSS;
 
-    content = `
+  content = `
     <div class="container">
         <div class="report-comp">
             <table id="report-comp-table">
@@ -29,23 +29,23 @@ export default class Report extends Base {
         <pagination-comp></pagination-comp>
         
     <div class="preview-advertisement"></div>
-    `
+    `;
 
-    constructor() {
-        super()
-        this.mount()
-    } //End of constructor
+  constructor() {
+    super();
+    this.mount();
+  } //End of constructor
 
-    // load rows
-    async loadRow() {
-        this.setLoader()
-        try {
-            const res = await axios.post(`${this.host}/feedback/get-all-report`, {
-                ...this.authData()
-            })
+  // load rows
+  async loadRow() {
+    this.setLoader();
+    try {
+      const res = await axios.post(`${this.host}/feedback/get-all-report`, {
+        ...this.authData(),
+      });
 
-            res.data.forEach(item => {
-                this._qs('#report-comp-table-body').innerHTML += `
+      res.data.forEach((item) => {
+        this._qs("#report-comp-table-body").innerHTML += `
                     <tr>
                         <td>${item._id}</td>
                         <td>${item.reason}</td>
@@ -57,41 +57,44 @@ export default class Report extends Base {
                         </td>
                         <td>${item.created}</td>
                     </tr>
-                `
-            })
-        } catch (err) {
-            console.log(err)
-        }
-        this.stopLoader()
-    } //End loadRow()
+                `;
+      });
+    } catch (err) {
+      console.log(err);
+    }
+    this.stopLoader();
+  } //End loadRow()
 
-    // //close the dock
-    // close() {
-    //     this._qs('#close-popup').addEventListener('click', () => {
-    //         this.exitDock()
-    //     })
-    // }//End of the close()
+  // //close the dock
+  // close() {
+  //     this._qs('#close-popup').addEventListener('click', () => {
+  //         this.exitDock()
+  //     })
+  // }//End of the close()
 
-    // // Exit the dock
-    // exitDock() {
-    //     this._qs('.backdrop').style.opacity = '0'
-    //     this._qs('.backdrop').style.pointerEvents = 'none'
-    // }// End of exitDock()
+  // // Exit the dock
+  // exitDock() {
+  //     this._qs('.backdrop').style.opacity = '0'
+  //     this._qs('.backdrop').style.pointerEvents = 'none'
+  // }// End of exitDock()
 
-    // //Exit with Escape key
-    // exitWithEscape() {
-    //     addEventListener('keyup', ({key}) => (key === 'Escape') ? this.exitDock() : null )
-    // }// End of exitWithEscape()
+  // //Exit with Escape key
+  // exitWithEscape() {
+  //     addEventListener('keyup', ({key}) => (key === 'Escape') ? this.exitDock() : null )
+  // }// End of exitWithEscape()
 
-    connectedCallback() {
-        // load rows
-        this.loadRow()
+  connectedCallback() {
+    // load rows
+    this.loadRow();
 
-        // // close the dock
-        // this.close()
-        // // Exit with escape key
-        // this.exitWithEscape()
-    } //End of connectedCallback
+    // // close the dock
+    // this.close()
+    // // Exit with escape key
+    // this.exitWithEscape()
+  } //End of connectedCallback
 } //End of Class
 
-window.customElements.define('report-comp', Report)
+const elementName = "report-comp";
+customElements.get(elementName) == undefined
+  ? window.customElements.define(elementName, Report)
+  : null;

@@ -2,11 +2,11 @@ import Base from "../Base.js";
 import CSS from "./forum.css.js";
 
 export default class ForumComment extends Base {
-    css = CSS;
+  css = CSS;
 
-    data = this.getParams('data-data');
+  data = this.getParams("data-data");
 
-    content = `
+  content = `
     <div>
         <div class="post-row">
             <h3 class="post-username" id="">${this.data.firstName} ${this.data.lastName} </h4>
@@ -20,15 +20,15 @@ export default class ForumComment extends Base {
     </div>
 
   `;
-    constructor() {
-            super();
-            this.mount();
-        } //End of constructor
+  constructor() {
+    super();
+    this.mount();
+  } //End of constructor
 
-
-    connectedCallback() {
-
-        } //End of connectedCallback()
+  connectedCallback() {} //End of connectedCallback()
 } //End of class
 
-window.customElements.define("forum-comment", ForumComment);
+const elementName = "forum-comment";
+customElements.get(elementName) == undefined
+  ? window.customElements.define(elementName, ForumComment)
+  : null;
