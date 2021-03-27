@@ -203,6 +203,10 @@ export default CSS = `
         margin: 0.2rem;
     }
 
+    .button-group {
+        display: flex;
+      }
+
     button:hover{
         background-position: right;
         color: black;
@@ -232,6 +236,27 @@ export default CSS = `
         flex-wrap: wrap;
         justify-content: space-around;
         margin: auto 1rem;
+    }
+
+    .danger-button {
+        background-image: linear-gradient(to right top, #870f0f, #981010, #a91011, #ba1111, #cc1111);
+      }
+    
+      .danger-button:hover {
+          box-shadow: 1px 1px 10px 3px rgba(204,17,17,1);
+      }
+    .type-card {
+        background-color: #001f3f;
+        color: white;
+        padding: 0.4rem;
+        margin: 0.2rem;
+        border-radius: 1rem;
+    }
+
+    .type {
+        display: flex;
+        width: 100%;
+        justify-content: end;
     }
 
     `

@@ -15,15 +15,12 @@ export default class PropertyDetails extends Base {
     super();
     this.mount();
     this.wait(".container");
-    //getFavourite
-    this.getFavourite();
   } //end of the constructor
 
   //load property
   async loadProperty() {
     await axios
-      .post(`${this.host}/property/get/property`, {
-        ...this.authData(),
+      .post(`${this.host}/property/get-property`, {
         propertyId: window.location.pathname.split("/")[2],
       })
       .then((res) => {
@@ -91,7 +88,13 @@ export default class PropertyDetails extends Base {
             </div>
             <div class="row">
               <div class="action">
-                <button class="reserve"> Reserve Now! </button>
+                ${
+                  res.data.user_id != this.getUserId()
+                    ? res.data.reserved != 1
+                      ? '<button class="reserve"> Reserve Now! </button>'
+                      : ""
+                    : ""
+                }
                 <button class="feedback"> Feedback </button>
                 <button class="map"> On map 📌</button>
               </div>
@@ -104,13 +107,18 @@ export default class PropertyDetails extends Base {
         this.loadFeatureList(JSON.parse(res.data.facilities));
 
         //Load the reserve component
-        this.loadReserve();
+        res.data.user_id != this.getUserId()
+          ? res.data.reserved != 1
+            ? this.loadReserve()
+            : false
+          : false;
 
         //loadComment
         this.loadComment();
 
         //Load map view component
         this.loadMapView();
+        this.state.location = res.data.location;
       });
   } //End of loadProperty()
 
@@ -137,15 +145,19 @@ export default class PropertyDetails extends Base {
 
   // load map view
   async mapView() {
-    await import("../universal/popup-map.js")
-      .then((res) => {
-        this._qs(
-          ".popup"
-        ).innerHTML = `<map-view location="${encodeURIComponent(
-          JSON.stringify({ lat: 7.8, lng: 80.4 })
-        )}"></map-view>`;
-      })
-      .catch((err) => this.popup(err, "error"));
+    if (this.state.location != "null") {
+      const location = JSON.parse(this.state.location);
+      await import("../universal/popup-map.js")
+        .then((res) => {
+          this._qs(
+            ".popup"
+          ).innerHTML = `<map-view location="${encodeURIComponent(
+            JSON.stringify({ lat: location.ltd, lng: location.lng })
+          )}"></map-view>`;
+        })
+        .catch((err) => this.popup(err, "error"));
+    }
+    this.popup("Location does not specified", "info", 2);
   } //End of mapView()
 
   //Load map view
@@ -157,11 +169,7 @@ export default class PropertyDetails extends Base {
   async getImages() {
     try {
       const res = await axios.post(
-        `${this.host}/images/property/${this.state.id}`,
-        {
-          ...this.authData(),
-          propertyId: this.state.id,
-        }
+        `${this.host}/images/get-property/${this.state.id}`
       );
 
       if (res.data.length == 0) {
@@ -279,18 +287,20 @@ export default class PropertyDetails extends Base {
   async addFavourite(action) {
     try {
       const res = await axios.post(
-        `${this.host}/property/favourite/${action}`,
+        `${this.host}/property/toggle-favourite/${action}`,
         {
           ...this.authData(),
           propertyId: this.getParam("id"),
         }
       );
       if (res.data.status == "204") {
-        if (action == "add") this.popup(res.data.message, "info");
-        else this.popup(res.data.message, "error");
+        if (action == "add") this.popup(res.data.message, "success");
+        else this.popup(res.data.message, "info");
+        return true;
       } else throw res.data;
     } catch (err) {
-      console.log(err);
+      this.popup(err.message, "error");
+      return false;
     }
   } //End of addFavourite()
 
@@ -299,17 +309,21 @@ export default class PropertyDetails extends Base {
     this._qs(".favourite").addEventListener("click", async () => {
       this.wait(".favourite");
       if (this._qs(".favourite").dataset.data == "add") {
-        await this.addFavourite("add");
-        this._qs(".favourite").innerHTML =
-          '<img src="/assets/icon/Favourite/Heart_Filled_24px.png"></img>';
-        this._qs(".favourite").title = "Remove from favourite";
-        this._qs(".favourite").dataset.data = "remove";
+        const res = await this.addFavourite("add");
+        if (res) {
+          this._qs(".favourite").innerHTML =
+            '<img src="/assets/icon/Favourite/Heart_Filled_24px.png"></img>';
+          this._qs(".favourite").title = "Remove from favourite";
+          this._qs(".favourite").dataset.data = "remove";
+        } else this.unwait(".favourite");
       } else {
-        await this.addFavourite("remove");
-        this._qs(".favourite").innerHTML =
-          '<img src="/assets/icon/Favourite/Heart_NotFilled_24px.png"></img>';
-        this._qs(".favourite").title = "Add to favourite";
-        this._qs(".favourite").dataset.data = "add";
+        const res = await this.addFavourite("remove");
+        if (res) {
+          this._qs(".favourite").innerHTML =
+            '<img src="/assets/icon/Favourite/Heart_NotFilled_24px.png"></img>';
+          this._qs(".favourite").title = "Add to favourite";
+          this._qs(".favourite").dataset.data = "add";
+        } else this.unwait(".favourite");
       }
     });
   } //End of listenaddFavourite()
@@ -317,18 +331,27 @@ export default class PropertyDetails extends Base {
   //getFavourite
   async getFavourite() {
     try {
-      const res = await axios.post(`${this.host}/property/favourite/get`, {
-        ...this.authData(),
-        propertyId: this.getParam("id"),
-      });
+      if (!this.isLogin()) {
+        this._qs(".favourite").innerHTML = "";
+      }
+      const res = await axios.post(
+        `${this.host}/property/get-favourite-status`,
+        {
+          ...this.authData(),
+          propertyId: this.getParam("id"),
+        }
+      );
       if (res.data.action == "1") {
         this._qs(".favourite").innerHTML =
           '<img src="/assets/icon/Favourite/Heart_Filled_24px.png"></img>';
         this._qs(".favourite").title = "Remove from favourite";
         this._qs(".favourite").dataset.data = "remove";
+      } else {
+        this._qs(".favourite").title = "Add to favourite";
+        this._qs(".favourite").dataset.data = "add";
       }
     } catch (err) {
-      console.log(err);
+      this.popup(err.message, "error");
     }
   } //End of getFavourite()
 
@@ -339,6 +362,9 @@ export default class PropertyDetails extends Base {
     this.showContacts();
     //get images
     await this.getImages();
+
+    //getFavourite
+    this.getFavourite();
 
     //preview Images
     this.previewImage();
